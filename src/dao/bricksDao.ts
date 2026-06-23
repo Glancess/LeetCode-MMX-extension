@@ -7,7 +7,7 @@
  * Copyright (c) 2022  ccagml . All rights reserved.
  */
 
-import { getbricksReviewDay, selectWorkspaceFolder } from "../utils/ConfigUtils";
+import { getbricksReviewDay, prepareExtensionDataDir, selectWorkspaceFolder } from "../utils/ConfigUtils";
 import { useWsl, toWinPath, getDayStart, getDayNow, getDayEnd } from "../utils/SystemUtils";
 import * as path from "path";
 import * as fse from "fs-extra";
@@ -26,7 +26,7 @@ import { BricksType } from "../model/ConstDefind";
 
 class BricksDao {
   version = 1;
-  public async bricks_data_path() {
+  public async bricks_data_path(useLegacyDir: boolean = false) {
     // const language: string | undefined = await fetchProblemLanguage();
     // if (!language) {
     //   return;
@@ -35,10 +35,10 @@ class BricksDao {
     if (!workspaceFolder) {
       return;
     }
-    let lcpr_data_path: string = path.join(workspaceFolder, ".lcpr_data");
+    let lcpr_data_path: string = await prepareExtensionDataDir(workspaceFolder, useLegacyDir);
     await fse.ensureDir(lcpr_data_path);
 
-    let finalPath = path.join(lcpr_data_path, "bricks.json");
+    let finalPath = path.join(lcpr_data_path, "study-progress.json");
     finalPath = useWsl() ? await toWinPath(finalPath) : finalPath;
 
     if (!(await fse.pathExists(finalPath))) {
@@ -63,8 +63,8 @@ class BricksDao {
     return await fse.writeFile(lcpr_data_path, JSON.stringify(data, null, 4));
   }
 
-  private async _read_data() {
-    let lcpr_data_path = await this.bricks_data_path();
+  private async _read_data(useLegacyDir: boolean = false) {
+    let lcpr_data_path = await this.bricks_data_path(useLegacyDir);
     if (!lcpr_data_path) {
       return {};
     }
@@ -72,8 +72,8 @@ class BricksDao {
     return JSON.parse(temp_data) || {};
   }
 
-  public async getAllBricks() {
-    let allData = await this._read_data();
+  public async getAllBricks(useLegacyDir: boolean = false) {
+    let allData = await this._read_data(useLegacyDir);
     return allData.all_bricks || {};
   }
 

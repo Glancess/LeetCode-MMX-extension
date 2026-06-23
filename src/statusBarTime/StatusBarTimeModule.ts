@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Filename: https://github.com/ccagml/leetcode-extension/src/statusBarTime/StatusBarTimeModule.ts
  * Path: https://github.com/ccagml/leetcode-extension
  * Created Date: Wednesday, September 27th 2023, 8:26:28 pm
@@ -15,7 +15,7 @@ import { enableTimerBar } from "../utils/ConfigUtils";
 import { BABAMediator, BABAProxy, BaseCC, BabaStr } from "../BABA";
 import { TreeNodeModel } from "../model/TreeNodeModel";
 
-// 状态栏工具
+// 鐘舵€佹爮宸ュ叿
 class StatusBarTimeService implements Disposable {
   private configurationChangeListener: Disposable;
   private showBar: StatusBarItem;
@@ -35,27 +35,27 @@ class StatusBarTimeService implements Disposable {
     this.startBar.text = "start";
     this.startBar.tooltip = "开始计时";
     this.startBar.show();
-    this.startBar.command = "lcpr.statusBarTime.start";
+    this.startBar.command = "mmxlocal.statusBarTime.start";
 
     this.stopBar = window.createStatusBarItem(undefined, 1002);
     this.stopBar.name = "stop";
     this.stopBar.text = "stop";
-    this.stopBar.tooltip = "暂停计时";
+    this.stopBar.tooltip = "鏆傚仠璁℃椂";
     this.stopBar.show();
-    this.stopBar.command = "lcpr.statusBarTime.stop";
+    this.stopBar.command = "mmxlocal.statusBarTime.stop";
 
     this.resetBar = window.createStatusBarItem(undefined, 1001);
     this.resetBar.name = "reset";
     this.resetBar.text = "reset";
-    this.resetBar.tooltip = "重置计时";
+    this.resetBar.tooltip = "閲嶇疆璁℃椂";
     this.resetBar.show();
-    this.resetBar.command = "lcpr.statusBarTime.reset";
+    this.resetBar.command = "mmxlocal.statusBarTime.reset";
 
     this.startTime = 0;
     this.saveTime = 0;
 
     this.configurationChangeListener = workspace.onDidChangeConfiguration((event: ConfigurationChangeEvent) => {
-      if (event.affectsConfiguration("leetcode-problem-rating.enableTimerBar")) {
+      if (event.affectsConfiguration("leetcode-sm2-review-local.enableTimerBar")) {
         this.setStatusBarVisibility();
       }
     }, this);
@@ -97,7 +97,7 @@ class StatusBarTimeService implements Disposable {
     if (e.sub_type == "submit" && e.accepted) {
       let msg = this.getCostTimeStr();
       if (msg) {
-        ShowMessage(`${e.fid}耗时${msg}`, OutPutType.info);
+        ShowMessage(`${e.fid}鑰楁椂${msg}`, OutPutType.info);
       }
       this.stop();
     }
@@ -118,7 +118,7 @@ class StatusBarTimeService implements Disposable {
     this.saveTime = 0;
   }
 
-  // 更新状态栏的数据
+  // 鏇存柊鐘舵€佹爮鐨勬暟鎹?
   public update_instance(): void {
     if (this.startTime && this.startTime > 0) {
       let diff = getDayNow() - this.startTime + this.saveTime;
@@ -141,12 +141,12 @@ class StatusBarTimeService implements Disposable {
     }
   }
 
-  // 更新数据
+  // 鏇存柊鏁版嵁
   public updateSecond(): void {
     this.update_instance();
   }
 
-  //销毁数据
+  //閿€姣佹暟鎹?
   public dispose(): void {
     this.showBar.dispose();
     this.startBar.dispose();
@@ -154,7 +154,7 @@ class StatusBarTimeService implements Disposable {
     this.resetBar.dispose();
     this.configurationChangeListener.dispose();
   }
-  // 设置可见性
+  // 璁剧疆鍙鎬?
   private setStatusBarVisibility(): void {
     if (enableTimerBar()) {
       this.showBar.show();

@@ -7,7 +7,7 @@
  * Copyright (c) 2022  ccagml . All rights reserved.
  */
 
-import { selectWorkspaceFolder } from "../utils/ConfigUtils";
+import { prepareExtensionDataDir, selectWorkspaceFolder } from "../utils/ConfigUtils";
 import { useWsl, toWinPath, getDayNowM } from "../utils/SystemUtils";
 import * as path from "path";
 import * as fse from "fs-extra";
@@ -28,7 +28,7 @@ class GroupDao {
     if (!workspaceFolder) {
       return;
     }
-    let lcpr_data_path: string = path.join(workspaceFolder, ".lcpr_data");
+    let lcpr_data_path: string = await prepareExtensionDataDir(workspaceFolder);
     await fse.ensureDir(lcpr_data_path);
 
     let finalPath = path.join(lcpr_data_path, "group.json");

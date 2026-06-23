@@ -76,7 +76,7 @@ class TreeViewController implements Disposable {
 
   constructor() {
     this.configurationChangeListener = workspace.onDidChangeConfiguration((event: ConfigurationChangeEvent) => {
-      if (event.affectsConfiguration("leetcode-problem-rating.hideScore")) {
+      if (event.affectsConfiguration("leetcode-sm2-review-local.hideScore")) {
         BABA.sendNotification(BabaStr.ConfigChange_hideScore);
       }
     }, this);
@@ -683,7 +683,7 @@ class TreeViewController implements Disposable {
       }
 
       const leetCodeConfig: vscode.WorkspaceConfiguration =
-        vscode.workspace.getConfiguration("leetcode-problem-rating");
+        vscode.workspace.getConfiguration("leetcode-sm2-review-local");
       const workspaceFolder: string = await selectWorkspaceFolder();
       if (!workspaceFolder) {
         return;
@@ -734,9 +734,9 @@ class TreeViewController implements Disposable {
             ),
           promptHintMessage(
             "hint.commentDescription",
-            'You can config how to show the problem description through "leetcode-problem-rating.showDescription".',
+            'You can config how to show the problem description through "leetcode-sm2-review-local.showDescription".',
             "Open settings",
-            (): Promise<any> => openSettingsEditor("leetcode-problem-rating.showDescription")
+            (): Promise<any> => openSettingsEditor("leetcode-sm2-review-local.showDescription")
           ),
         ];
         if (descriptionConfig.showInWebview) {

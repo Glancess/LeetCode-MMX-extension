@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Filename: https://github.com/ccagml/leetcode-extension/src/remark/RemarkService.ts
  * Path: https://github.com/ccagml/leetcode-extension
  * Created Date: Saturday, October 14th 2023, 2:24:19 pm
@@ -8,142 +8,153 @@
  */
 
 import {
-  CommentMode,
-  CommentThread,
-  CommentReply,
-  CommentThreadCollapsibleState,
-  TextDocument,
   CancellationToken,
-  comments,
-  Range,
+  CommentMode,
+  CommentReply,
+  CommentThread,
+  CommentThreadCollapsibleState,
   Disposable,
-  window,
   Position,
+  Range,
+  TextDocument,
+  comments,
+  window,
 } from "vscode";
 
-import { remarkDao } from "../dao/remarkDao";
+import { BABA, BABAMediator, BABAProxy, BabaStr, BaseCC } from "../BABA";
 import { RemarkComment } from "../model/ConstDefind";
-import { includeTemplatesAuto, getIncludeTemplate } from "../utils/ConfigUtils";
-import { BABAMediator, BABAProxy, BaseCC, BabaStr, BABA } from "../BABA";
+import { remarkDao } from "../dao/remarkDao";
+import { getIncludeTemplate, includeTemplatesAuto } from "../utils/ConfigUtils";
+
+interface IDocumentProblemInfo {
+  fid?: string;
+  qid?: string;
+}
 
 class RemarkService implements Disposable {
-  private _remarkComment;
-  private _qid_map_thread: Map<string, CommentThread>;
-
-  getQidByDocument(document: TextDocument) {
-    const content: string = document.getText();
-    const matchResult: RegExpMatchArray | null = content.match(
-      /@lc app=(.*) id=(.*|\w*|\W*|[\\u4e00-\\u9fa5]*) lang=(.*)/
-    );
-    let result: Map<string, string> = new Map<string, string>();
-    if (!matchResult) {
-      return result;
-    }
-    const fid: string | undefined = matchResult[2];
-    let qid: string | undefined = BABA.getProxy(BabaStr.QuestionDataProxy).getQidByFid(fid);
-    result["fid"] = fid;
-    if (qid != undefined) {
-      result["qid"] = qid.toString();
-    }
-    return result;
-  }
+  private readonly remarkController;
+  private readonly qidThreadMap: Map<string, CommentThread>;
 
   constructor() {
-    this._qid_map_thread = new Map<string, CommentThread>();
-    this._remarkComment = comments.createCommentController("comment-sample", "Comment API Sample");
-    this._remarkComment.options = { prompt: "新的记录", placeHolder: "开始记录内容" };
-    this._remarkComment.commentingRangeProvider = {
-      provideCommentingRanges: (_: TextDocument, __: CancellationToken) => {
-        return undefined;
-      },
+    this.qidThreadMap = new Map<string, CommentThread>();
+    this.remarkController = comments.createCommentController("mmxlocal-remark", "MMX Local Remark");
+    this.remarkController.options = { prompt: "新的笔记", placeHolder: "开始记录内容" };
+    this.remarkController.commentingRangeProvider = {
+      provideCommentingRanges: (_: TextDocument, __: CancellationToken) => undefined,
     };
   }
 
-  public async includeTemplates(document: TextDocument) {
+  private getProblemInfoByDocument(document: TextDocument): IDocumentProblemInfo {
     const content: string = document.getText();
-    const matchResult: RegExpMatchArray | null = content.match(
-      /@lc app=(.*) id=(.*|\w*|\W*|[\\u4e00-\\u9fa5]*) lang=(.*)/
-    );
-    if (!matchResult || !matchResult[3]) {
-      return undefined;
+    const matchResult: RegExpMatchArray | null = content.match(/@lc app=(.*) id=(.*) lang=(.*)/);
+    if (!matchResult) {
+      return {};
     }
-    for (let i: number = 0; i < document.lineCount; i++) {
-      const lineContent: string = document.lineAt(i).text;
-      // 有了就不添加了
+
+    const fid = matchResult[2];
+    const qid = BABA.getProxy(BabaStr.QuestionDataProxy).getQidByFid(fid);
+    return {
+      fid,
+      qid: qid?.toString(),
+    };
+  }
+
+  public async includeTemplates(document?: TextDocument): Promise<void> {
+    const targetDocument = document || window.activeTextEditor?.document;
+    if (!targetDocument) {
+      void window.showWarningMessage("未找到当前题目的代码文件。");
+      return;
+    }
+
+    const content: string = targetDocument.getText();
+    const matchResult: RegExpMatchArray | null = content.match(/@lc app=(.*) id=(.*) lang=(.*)/);
+    if (!matchResult || !matchResult[3]) {
+      void window.showWarningMessage("当前文件不是 LeetCode 题目文件，无法插入模板。");
+      return;
+    }
+
+    for (let i = 0; i < targetDocument.lineCount; i++) {
+      const lineContent: string = targetDocument.lineAt(i).text;
       if (lineContent.indexOf("@lcpr-template-start") >= 0) {
-        break;
+        void window.showInformationMessage("模板已存在，无需重复插入。");
+        return;
       }
 
       if (lineContent.indexOf("@lc code=start") >= 0) {
         const editor = window.activeTextEditor;
+        if (!editor || editor.document.uri.toString() !== targetDocument.uri.toString()) {
+          void window.showWarningMessage("请先激活当前题目的编辑器，再插入模板。");
+          return;
+        }
 
-        await new Promise(async (resolve, _) => {
+        await new Promise<void>((resolve) => {
           editor
-            ?.edit((edit) => {
-              edit.insert(new Position(i - 1, i - 1), getIncludeTemplate(matchResult[3]));
+            .edit((editBuilder) => {
+              editBuilder.insert(new Position(i - 1, 0), getIncludeTemplate(matchResult[3]));
             })
-            .then((success) => {
+            .then(async (success) => {
               if (success) {
-                editor.document.save().then(() => {
-                  resolve(1);
-                });
-              } else {
-                resolve(1);
+                await editor.document.save();
+                void window.showInformationMessage("已插入 includeTemplates。");
               }
+              resolve();
             });
         });
-        break;
+        return;
       }
     }
-    return undefined;
+
+    void window.showWarningMessage("未找到 @lc code=start，无法插入模板。");
   }
 
-  public async startRemark(document: TextDocument) {
-    let docInfo = this.getQidByDocument(document);
-    if (docInfo["qid"] == undefined) {
+  public async startRemark(document: TextDocument): Promise<void> {
+    const docInfo = this.getProblemInfoByDocument(document);
+    if (!docInfo.qid) {
       return;
     }
-    if (this._qid_map_thread.get(docInfo["qid"]) != undefined) {
-      // 已经有了
-      this._qid_map_thread.get(docInfo["qid"])?.dispose();
-      this._qid_map_thread.delete(docInfo["qid"]);
+
+    const existingThread = this.qidThreadMap.get(docInfo.qid);
+    if (existingThread) {
+      existingThread.dispose();
+      this.qidThreadMap.delete(docInfo.qid);
     }
-    let oldRemark = await this.getOldThreadRemarkByQid(docInfo["qid"]);
-    for (let i: number = 0; i < document.lineCount; i++) {
+
+    const oldRemark = await this.getOldThreadRemarkByQid(docInfo.qid);
+    for (let i = 0; i < document.lineCount; i++) {
       const lineContent: string = document.lineAt(i).text;
       if (lineContent.indexOf("@lc code=start") >= 0) {
-        let newRemark = this._remarkComment.createCommentThread(document.uri, new Range(i - 1, 0, i - 1, 0), oldRemark);
-        newRemark.comments.forEach((element) => {
-          element.parent = newRemark;
+        const thread = this.remarkController.createCommentThread(document.uri, new Range(i - 1, 0, i - 1, 0), oldRemark);
+        thread.comments.forEach((comment) => {
+          (comment as RemarkComment).parent = thread;
         });
 
-        newRemark.contextValue = `qid=${docInfo["qid"]}`;
-        newRemark.label = `${docInfo["fid"]}`;
-        newRemark.collapsibleState = CommentThreadCollapsibleState.Expanded;
-        this._qid_map_thread.set(docInfo["qid"], newRemark);
+        thread.contextValue = `qid=${docInfo.qid}`;
+        thread.label = `${docInfo.fid || ""}`;
+        thread.collapsibleState = CommentThreadCollapsibleState.Expanded;
+        this.qidThreadMap.set(docInfo.qid, thread);
         break;
       }
     }
   }
 
-  public remarkCreateNote(reply: CommentReply) {
-    this.replyNote(reply);
+  public async remarkCreateNote(reply: CommentReply): Promise<void> {
+    await this.replyNote(reply);
   }
 
-  public remarkReplyNote(reply: CommentReply) {
-    this.replyNote(reply);
+  public async remarkReplyNote(reply: CommentReply): Promise<void> {
+    await this.replyNote(reply);
   }
 
-  public remarkDeleteNoteComment(comment: RemarkComment) {
+  public async remarkDeleteNoteComment(comment: RemarkComment): Promise<void> {
     if (!comment.parent) {
       return;
     }
 
     comment.parent.comments = comment.parent.comments.filter((cmt) => (cmt as RemarkComment).id !== comment.id);
-    this.saveThreadRemark(comment.parent);
+    await this.saveThreadRemark(comment.parent);
   }
 
-  public remarkCancelsaveNote(comment: RemarkComment) {
+  public async remarkCancelsaveNote(comment: RemarkComment): Promise<void> {
     if (!comment.parent) {
       return;
     }
@@ -152,15 +163,17 @@ class RemarkService implements Disposable {
       if ((cmt as RemarkComment).id === comment.id) {
         cmt.mode = CommentMode.Preview;
       }
-
       return cmt;
     });
-    this.saveThreadRemark(comment.parent);
+
+    await this.saveThreadRemark(comment.parent);
   }
-  public remarkSaveNote(comment: RemarkComment) {
-    this.remarkCancelsaveNote(comment);
+
+  public async remarkSaveNote(comment: RemarkComment): Promise<void> {
+    await this.remarkCancelsaveNote(comment);
   }
-  public remarkEditNote(comment: RemarkComment) {
+
+  public async remarkEditNote(comment: RemarkComment): Promise<void> {
     if (!comment.parent) {
       return;
     }
@@ -169,55 +182,57 @@ class RemarkService implements Disposable {
       if ((cmt as RemarkComment).id === comment.id) {
         cmt.mode = CommentMode.Editing;
       }
-
       return cmt;
     });
 
-    this.saveThreadRemark(comment.parent);
+    await this.saveThreadRemark(comment.parent);
   }
 
-  public replyNote(reply: CommentReply) {
-    let thread = reply.thread;
-    let newComment = new RemarkComment(reply.text, thread);
+  private async replyNote(reply: CommentReply): Promise<void> {
+    const thread = reply.thread;
+    const newComment = new RemarkComment(reply.text, thread);
     thread.comments = [...thread.comments, newComment];
-    this.saveThreadRemark(thread);
+    await this.saveThreadRemark(thread);
   }
 
-  public saveThreadRemark(thread) {
-    const params: URLSearchParams = new URLSearchParams(thread.contextValue);
-    let qid = params.get("qid");
-    if (!qid) {
-      return;
-    }
-    let data: Array<any> = [];
-    thread.comments.forEach((element) => {
-      data.push(element.getDbData());
-    });
-    let remarkData = {};
-    remarkData["data"] = data;
-    remarkDao.setInfoByQid(qid, remarkData);
-  }
-  public async getOldThreadRemarkByQid(qid: string, thread?) {
-    let remarkData = await remarkDao.getInfoByQid(qid);
-    let remarkDataBody = remarkData["data"] || [];
-    let OldRemark: Array<any> = [];
-    remarkDataBody.forEach((element) => {
-      OldRemark.push(RemarkComment.getObjByDbData(element, thread));
-    });
-    return OldRemark;
-  }
-
-  public remarkClose(thread) {
-    const params: URLSearchParams = new URLSearchParams(thread.contextValue);
-    let qid = params.get("qid");
+  private async saveThreadRemark(thread: CommentThread): Promise<void> {
+    const params: URLSearchParams = new URLSearchParams(thread.contextValue || "");
+    const qid = params.get("qid");
     if (!qid) {
       return;
     }
 
-    this._qid_map_thread.get(qid)?.dispose();
+    const data = thread.comments.map((comment) => (comment as RemarkComment).getDbData());
+    await remarkDao.setInfoByQid(qid, { data });
   }
 
-  public dispose(): void { }
+  private async getOldThreadRemarkByQid(qid: string): Promise<RemarkComment[]> {
+    const remarkData = await remarkDao.getInfoByQid(qid);
+    const remarkDataBody = remarkData["data"] || [];
+    return remarkDataBody.map((element) => RemarkComment.getObjByDbData(element));
+  }
+
+  public remarkClose(thread?: CommentThread): void {
+    if (!thread) {
+      return;
+    }
+
+    const params: URLSearchParams = new URLSearchParams(thread.contextValue || "");
+    const qid = params.get("qid");
+    thread.dispose();
+
+    if (!qid) {
+      return;
+    }
+
+    this.qidThreadMap.delete(qid);
+  }
+
+  public dispose(): void {
+    this.qidThreadMap.forEach((thread) => thread.dispose());
+    this.qidThreadMap.clear();
+    this.remarkController.dispose();
+  }
 }
 
 export const remarkService: RemarkService = new RemarkService();
@@ -249,42 +264,43 @@ export class RemarkMediator extends BABAMediator {
       BabaStr.BABACMD_includeTemplates,
     ];
   }
+
   async handleNotification(_notification: BaseCC.BaseCC.INotification) {
-    let body = _notification.getBody();
+    const body = _notification.getBody();
     switch (_notification.getName()) {
-      case BabaStr.showProblemFinishOpen:
-        let temp_doc = window.activeTextEditor?.document;
-        if (temp_doc != undefined && includeTemplatesAuto()) {
-          remarkService.includeTemplates(temp_doc);
+      case BabaStr.showProblemFinishOpen: {
+        const activeDocument = window.activeTextEditor?.document;
+        if (activeDocument && includeTemplatesAuto()) {
+          await remarkService.includeTemplates(activeDocument);
         }
         break;
-
+      }
       case BabaStr.BABACMD_remarkCreateNote:
-        remarkService.remarkCreateNote(body);
+        await remarkService.remarkCreateNote(body);
         break;
       case BabaStr.BABACMD_remarkClose:
         remarkService.remarkClose(body);
         break;
       case BabaStr.BABACMD_remarkReplyNote:
-        remarkService.remarkReplyNote(body);
+        await remarkService.remarkReplyNote(body);
         break;
       case BabaStr.BABACMD_remarkDeleteNoteComment:
-        remarkService.remarkDeleteNoteComment(body);
+        await remarkService.remarkDeleteNoteComment(body);
         break;
       case BabaStr.BABACMD_remarkCancelsaveNote:
-        remarkService.remarkCancelsaveNote(body);
+        await remarkService.remarkCancelsaveNote(body);
         break;
       case BabaStr.BABACMD_remarkSaveNote:
-        remarkService.remarkSaveNote(body);
+        await remarkService.remarkSaveNote(body);
         break;
       case BabaStr.BABACMD_remarkEditNote:
-        remarkService.remarkEditNote(body);
+        await remarkService.remarkEditNote(body);
         break;
       case BabaStr.BABACMD_startRemark:
-        remarkService.startRemark(body);
+        await remarkService.startRemark(body);
         break;
       case BabaStr.BABACMD_includeTemplates:
-        remarkService.includeTemplates(body);
+        await remarkService.includeTemplates(body);
         break;
       default:
         break;

@@ -15,6 +15,7 @@ import { IWebViewOption } from "../model/ConstDefind";
 import { promptHintMessage } from "../utils/OutputUtils";
 import { isAnswerDiffColor } from "../utils/ConfigUtils";
 import { BABA, BABAMediator, BABAProxy, BabaStr, BaseCC } from "../BABA";
+import { showReviewPanel } from "../bricksReviewController";
 
 class SubmissionService extends BaseWebViewService {
   protected readonly viewType: string = "leetcode.submission";
@@ -43,6 +44,7 @@ class SubmissionService extends BaseWebViewService {
       this.tempTestCase.set(qid, tsd);
     }
     BABA.sendNotification(BabaStr.CommitResult_showFinish, submit_event);
+    this.tryShowReviewPanel(submit_event);
   }
   public getSubmitEvent(): ISubmitEvent {
     return this.result.system_message as unknown as ISubmitEvent;
@@ -227,6 +229,21 @@ class SubmissionService extends BaseWebViewService {
     }
 
     return temp;
+  }
+
+  private tryShowReviewPanel(submitEvent: ISubmitEvent): void {
+    if (!submitEvent?.accepted || submitEvent?.sub_type !== "submit") {
+      return;
+    }
+
+    const qid = submitEvent.qid?.toString();
+    if (!qid) {
+      return;
+    }
+
+    const questionNode = BABA.getProxy(BabaStr.QuestionDataProxy).getNodeByQid(qid);
+    const problemName = questionNode?.name || `Problem ${qid}`;
+    void showReviewPanel(qid, problemName);
   }
 }
 

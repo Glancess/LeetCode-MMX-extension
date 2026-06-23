@@ -25,7 +25,7 @@ export class FileButtonService implements vscode.CodeLensProvider {
     this.onDidChangeCodeLensesEmitter.fire();
   }
 
-  // 处理代码的按钮
+  // 处理代码的按�?
   private processCodeButton(codeLensLine, document, node, nodeLang): vscode.CodeLens[] {
     const temp_result: vscode.CodeLens[] = [];
     const shortcuts: string[] = getEditorShortcuts();
@@ -39,7 +39,7 @@ export class FileButtonService implements vscode.CodeLensProvider {
       temp_result.push(
         new vscode.CodeLens(range, {
           title: "Submit",
-          command: "lcpr.submitSolution",
+          command: "mmxlocal.submitSolution",
           arguments: [document.uri],
         })
       );
@@ -49,7 +49,7 @@ export class FileButtonService implements vscode.CodeLensProvider {
       temp_result.push(
         new vscode.CodeLens(range, {
           title: "case",
-          command: "lcpr.testCaseDef",
+          command: "mmxlocal.testCaseDef",
           arguments: [document.uri, false],
         })
       );
@@ -58,7 +58,7 @@ export class FileButtonService implements vscode.CodeLensProvider {
       temp_result.push(
         new vscode.CodeLens(range, {
           title: "allcase",
-          command: "lcpr.testCaseDef",
+          command: "mmxlocal.testCaseDef",
           arguments: [document.uri, true],
         })
       );
@@ -68,7 +68,7 @@ export class FileButtonService implements vscode.CodeLensProvider {
       temp_result.push(
         new vscode.CodeLens(range, {
           title: "Test",
-          command: "lcpr.testSolution",
+          command: "mmxlocal.testSolution",
           arguments: [document.uri],
         })
       );
@@ -78,7 +78,7 @@ export class FileButtonService implements vscode.CodeLensProvider {
       temp_result.push(
         new vscode.CodeLens(range, {
           title: "ReTest",
-          command: "lcpr.reTestSolution",
+          command: "mmxlocal.reTestSolution",
           arguments: [document.uri],
         })
       );
@@ -88,7 +88,7 @@ export class FileButtonService implements vscode.CodeLensProvider {
       temp_result.push(
         new vscode.CodeLens(range, {
           title: node.isFavorite ? "Unstar" : "Star",
-          command: node.isFavorite ? "lcpr.removeFavorite" : "lcpr.addFavorite",
+          command: node.isFavorite ? "mmxlocal.removeFavorite" : "mmxlocal.addFavorite",
           arguments: [node],
         })
       );
@@ -98,7 +98,7 @@ export class FileButtonService implements vscode.CodeLensProvider {
       temp_result.push(
         new vscode.CodeLens(range, {
           title: "Solution",
-          command: "lcpr.getHelp",
+          command: "mmxlocal.getHelp",
           arguments: [document.uri],
         })
       );
@@ -108,7 +108,7 @@ export class FileButtonService implements vscode.CodeLensProvider {
       temp_result.push(
         new vscode.CodeLens(range, {
           title: "Description",
-          command: "lcpr.previewProblem",
+          command: "mmxlocal.previewProblem",
           arguments: [document.uri],
         })
       );
@@ -119,7 +119,7 @@ export class FileButtonService implements vscode.CodeLensProvider {
         temp_result.push(
           new vscode.CodeLens(range, {
             title: "debug",
-            command: "lcpr.simpleDebug",
+            command: "mmxlocal.simpleDebug",
             arguments: [document],
           })
         );
@@ -146,14 +146,14 @@ export class FileButtonService implements vscode.CodeLensProvider {
       temp_result.push(
         new vscode.CodeLens(range, {
           title: "case",
-          command: "lcpr.tesCaseArea",
+          command: "mmxlocal.tesCaseArea",
           arguments: [document.uri, testCase],
         })
       );
     }
 
     if (supportDebugLanguages.indexOf(nodeLang) != -1) {
-      // 如果获取的是windows系统,python3 调试的按理是字符串"",需要多一个空格,不然在debug的时候命令行参数会解析错误
+      // 如果获取的是windows系统,python3 调试的按理是字符�?",需要多一个空�?不然在debug的时候命令行参数会解析错�?
       if (isWindows() && "python3" == nodeLang) {
         testCase = testCase.replace(/^"/, ' "');
       }
@@ -162,7 +162,7 @@ export class FileButtonService implements vscode.CodeLensProvider {
         temp_result.push(
           new vscode.CodeLens(range, {
             title: "debug",
-            command: "lcpr.simpleDebug",
+            command: "mmxlocal.simpleDebug",
             arguments: [document, testCase],
           })
         );
@@ -180,20 +180,20 @@ export class FileButtonService implements vscode.CodeLensProvider {
     temp_result.push(
       new vscode.CodeLens(range, {
         title: "remark",
-        command: "lcpr.startRemark",
+        command: "mmxlocal.startRemark",
         arguments: [document],
       }),
       new vscode.CodeLens(range, {
         title: "includeTemplates",
-        command: "lcpr.includeTemplates",
+        command: "mmxlocal.includeTemplates",
         arguments: [document],
       })
     );
     return temp_result;
   }
 
-  // 去除测试用例前的注释符号, 测试用例 可能有某些语言的注释符号, 例如 844题的#
-  // 有些题目的用例是空格如125题
+  // 去除测试用例前的注释符号, 测试用例 可能有某些语言的注释符�? 例如 844题的#
+  // 有些题目的用例是空格�?25�?
   public fix_lineContent(lineContent) {
     let cut_pos = 0;
     for (let left = 0; left < lineContent.length; left++) {
@@ -234,14 +234,14 @@ export class FileButtonService implements vscode.CodeLensProvider {
         temp_result.push(
           new vscode.CodeLens(range, {
             title: "addParam",
-            command: "lcpr.addDebugType",
+            command: "mmxlocal.addDebugType",
             arguments: [document, "paramTypes"],
           })
         );
         temp_result.push(
           new vscode.CodeLens(range, {
             title: "resetParam",
-            command: "lcpr.resetDebugType",
+            command: "mmxlocal.resetDebugType",
             arguments: [document, "paramTypes"],
           })
         );
@@ -252,14 +252,14 @@ export class FileButtonService implements vscode.CodeLensProvider {
     //   temp_result.push(
     //     new vscode.CodeLens(range, {
     //       title: "addReturn",
-    //       command: "lcpr.addDebugType",
+    //       command: "mmxlocal.addDebugType",
     //       arguments: [document, "returnType"],
     //     })
     //   );
     //   temp_result.push(
     //     new vscode.CodeLens(range, {
     //       title: "resetReturn",
-    //       command: "lcpr.resetDebugType",
+    //       command: "mmxlocal.resetDebugType",
     //       arguments: [document, "returnType"],
     //     })
     //   );
@@ -300,7 +300,7 @@ export class FileButtonService implements vscode.CodeLensProvider {
       if (caseFlag && lineContent.indexOf("@lcpr case=end") < 0) {
         curCase += this.fix_lineContent(lineContent);
       }
-      // 收集所有用例
+      // 收集所有用�?
       if (lineContent.indexOf("@lcpr case=start") >= 0) {
         caseFlag = true;
       }
@@ -311,7 +311,7 @@ export class FileButtonService implements vscode.CodeLensProvider {
         caseFlag = false;
       }
 
-      // 收集所有用例
+      // 收集所有用�?
       if (lineContent.indexOf("@lcpr-div-debug-arg-end") >= 0) {
         debugFlag = false;
       }
@@ -320,7 +320,7 @@ export class FileButtonService implements vscode.CodeLensProvider {
         this.createDebugButton(i, document, lineContent).forEach((x) => codeLens.push(x));
       }
 
-      // 收集所有用例
+      // 收集所有用�?
       if (lineContent.indexOf("@lcpr-div-debug-arg-start") >= 0) {
         debugFlag = true;
       }
@@ -339,7 +339,7 @@ class FileButtonConfigChange implements vscode.Disposable {
   constructor() {
     this.configurationChangeListener = vscode.workspace.onDidChangeConfiguration(
       (event: vscode.ConfigurationChangeEvent) => {
-        if (event.affectsConfiguration("leetcode-problem-rating.editor.shortcuts")) {
+        if (event.affectsConfiguration("leetcode-sm2-review-local.editor.shortcuts")) {
           BABA.sendNotification(BabaStr.FileButton_ConfigChange);
         }
       },

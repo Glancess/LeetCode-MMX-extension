@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Filename: https://github.com/ccagml/leetcode-extension/src/service/TreeDataService.ts
  * Path: https://github.com/ccagml/leetcode-extension
  * Created Date: Thursday, October 27th 2022, 7:43:29 pm
@@ -60,7 +60,7 @@ export class TreeDataService implements vscode.TreeDataProvider<TreeNodeModel> {
         label: element.name,
         collapsibleState: vscode.TreeItemCollapsibleState.None,
         command: {
-          command: "lcpr.signin",
+          command: "mmxlocal.signin",
           title: "未登录",
         },
       };
@@ -194,9 +194,9 @@ export class TreeDataService implements vscode.TreeDataProvider<TreeNodeModel> {
         value: Endpoint.LeetCode,
       },
       {
-        label: `${isCnEnabled ? "$(check) " : ""}力扣`,
+        label: `${isCnEnabled ? "$(check) " : ""}鍔涙墸`,
         description: "leetcode.cn",
-        detail: `启用中国版 LeetCode.cn`,
+        detail: `鍚敤涓浗鐗?LeetCode.cn`,
         value: Endpoint.LeetCodeCN,
       }
     );
@@ -204,22 +204,22 @@ export class TreeDataService implements vscode.TreeDataProvider<TreeNodeModel> {
     if (!choice || choice.value === getLeetCodeEndpoint()) {
       return;
     }
-    const leetCodeConfig: vscode.WorkspaceConfiguration = vscode.workspace.getConfiguration("leetcode-problem-rating");
+    const leetCodeConfig: vscode.WorkspaceConfiguration = vscode.workspace.getConfiguration("leetcode-sm2-review-local");
     try {
       const endpoint: string = choice.value;
       await BABA.getProxy(BabaStr.ChildCallProxy).get_instance().switchEndpoint(endpoint);
       await leetCodeConfig.update("endpoint", endpoint, true /* UserSetting */);
       vscode.window.showInformationMessage(`Switched the endpoint to ${endpoint}`);
     } catch (error) {
-      await ShowMessage("切换站点出错. 请查看控制台信息~", OutPutType.error);
+      await ShowMessage("鍒囨崲绔欑偣鍑洪敊. 璇锋煡鐪嬫帶鍒跺彴淇℃伅~", OutPutType.error);
     }
 
     try {
-      await vscode.commands.executeCommand("lcpr.signout");
+      await vscode.commands.executeCommand("mmxlocal.signout");
       await BABA.getProxy(BabaStr.ChildCallProxy).get_instance().deleteCache();
       await promptForSignIn();
     } catch (error) {
-      await ShowMessage("登录失败. 请查看控制台信息~", OutPutType.error);
+      await ShowMessage("鐧诲綍澶辫触. 璇锋煡鐪嬫帶鍒跺彴淇℃伅~", OutPutType.error);
     }
   }
   public async previewProblem(input: TreeNodeModel | vscode.Uri, isSideMode: boolean = false): Promise<void> {
@@ -260,22 +260,22 @@ export class TreeDataService implements vscode.TreeDataProvider<TreeNodeModel> {
         isSideMode: isSideMode,
       });
     } else {
-      await ShowMessage(`${descString} 请查看控制台信息~`, OutPutType.error);
+      await ShowMessage(`${descString} 璇锋煡鐪嬫帶鍒跺彴淇℃伅~`, OutPutType.error);
     }
   }
 
   public async signIn(): Promise<void> {
     const picks: Array<IQuickItemEx<string>> = [];
     let qpOpiton: vscode.QuickPickOptions = {
-      title: "正在登录leetcode.com",
+      title: "姝ｅ湪鐧诲綍leetcode.com",
       matchOnDescription: false,
       matchOnDetail: false,
-      placeHolder: "请选择登录方式 正在登录leetcode.com",
+      placeHolder: "璇烽€夋嫨鐧诲綍鏂瑰紡 姝ｅ湪鐧诲綍leetcode.com",
     };
     if (getLeetCodeEndpoint() == Endpoint.LeetCodeCN) {
       picks.push({
         label: "LeetCode Account",
-        detail: "只能登录leetcode.cn",
+        detail: "鍙兘鐧诲綍leetcode.cn",
         value: "LeetCode",
       },
         {
@@ -283,14 +283,14 @@ export class TreeDataService implements vscode.TreeDataProvider<TreeNodeModel> {
           detail: "Use LeetCode cookie copied from browser to login",
           value: "Cookie",
         });
-      qpOpiton.title = "正在登录中文版leetcode.cn";
-      qpOpiton.placeHolder = "请选择登录方式 正在登录中文版leetcode.cn";
+      qpOpiton.title = "姝ｅ湪鐧诲綍涓枃鐗坙eetcode.cn";
+      qpOpiton.placeHolder = "璇烽€夋嫨鐧诲綍鏂瑰紡 姝ｅ湪鐧诲綍涓枃鐗坙eetcode.cn";
     }
 
     if (getLeetCodeEndpoint() == Endpoint.LeetCode) {
       picks.push({
         label: "LeetCode chrome copy curl(bash) ",
-        detail: "使用chrome复制最后一个graphql网络请求为curl请求,去掉复制内容中的换行符",
+        detail: "Use Chrome copied GraphQL curl request to sign in",
         value: "curltype",
       })
     }
@@ -313,28 +313,28 @@ export class TreeDataService implements vscode.TreeDataProvider<TreeNodeModel> {
     let loginMethod = choice.value;
 
     const isByCookie: boolean = loginMethod === "Cookie";
-    const inMessage: string = isByCookie ? " 通过cookie登录" : "登录";
+    const inMessage: string = isByCookie ? " 閫氳繃cookie鐧诲綍" : "鐧诲綍";
     try {
       const userName: string | undefined = await BABA.getProxy(BabaStr.ChildCallProxy)
         .get_instance()
         .trySignIn(loginMethod);
       if (userName) {
         BABA.sendNotification(BabaStr.USER_LOGIN_SUC, { userName: userName });
-        vscode.window.showInformationMessage(`${inMessage} 成功`);
+        vscode.window.showInformationMessage(`${inMessage} 鎴愬姛`);
       }
     } catch (error) {
-      ShowMessage(`${inMessage}失败. 请看看控制台输出信息`, OutPutType.error);
+      ShowMessage(`${inMessage}澶辫触. 璇风湅鐪嬫帶鍒跺彴杈撳嚭淇℃伅`, OutPutType.error);
     }
   }
 
-  // 登出
+  // 鐧诲嚭
   /**
    * It signs out the user
    */
   public async signOut(): Promise<void> {
     try {
       await BABA.getProxy(BabaStr.ChildCallProxy).get_instance().signOut();
-      vscode.window.showInformationMessage("成功登出");
+      vscode.window.showInformationMessage("鎴愬姛鐧诲嚭");
 
       BABA.sendNotification(BabaStr.USER_LOGIN_OUT, {});
     } catch (error) {
@@ -342,7 +342,7 @@ export class TreeDataService implements vscode.TreeDataProvider<TreeNodeModel> {
     }
   }
 
-  // 删除所有缓存
+  // 鍒犻櫎鎵€鏈夌紦瀛?
   /**
    * It signs out, removes old cache, switches to the default endpoint, and refreshes the tree data
    */

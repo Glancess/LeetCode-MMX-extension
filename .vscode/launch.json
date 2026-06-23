@@ -3,13 +3,15 @@
     "version": "0.1.0",
     "configurations": [
         {
-            "name": "master",
+            "name": "local_daily_test",
             // "type": "extensionHost",
             "type": "extensionHost",
             "request": "launch",
             "runtimeExecutable": "${execPath}",
             "args": [
                 "--extensionDevelopmentPath=${workspaceRoot}",
+                "--user-data-dir=${workspaceRoot}/.vscode/dev-user-data",
+                "--extensions-dir=${workspaceRoot}/.vscode/dev-extensions",
                 "--no-warnings"
             ],
             "autoAttachChildProcesses": true,
@@ -45,6 +47,8 @@
             "runtimeExecutable": "${execPath}",
             "args": [
                 "--extensionDevelopmentPath=${workspaceRoot}",
+                "--user-data-dir=${workspaceRoot}/.vscode/test-user-data",
+                "--extensions-dir=${workspaceRoot}/.vscode/test-extensions",
                 "--extensionTestsPath=${workspaceRoot}/out/test",
                 "--trace-warnings"
             ],
@@ -56,13 +60,15 @@
             "preLaunchTask": "npm"
         },
         {
-            "name": "windows_master",
+            "name": "local_daily_test_windows",
             // "type": "extensionHost",
             "type": "extensionHost",
             "request": "launch",
             "runtimeExecutable": "${execPath}",
             "args": [
                 "--extensionDevelopmentPath=${workspaceRoot}",
+                "--user-data-dir=${workspaceRoot}/.vscode/dev-user-data",
+                "--extensions-dir=${workspaceRoot}/.vscode/dev-extensions",
                 "--trace-warnings"
             ],
             "autoAttachChildProcesses": true,

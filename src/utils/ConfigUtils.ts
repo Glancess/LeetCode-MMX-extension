@@ -41,7 +41,15 @@ import { ShowMessage } from "./OutputUtils";
 
 // vscode的配置
 export function getVsCodeConfig(): WorkspaceConfiguration {
-  return workspace.getConfiguration("leetcode-problem-rating");
+  return workspace.getConfiguration("leetcode-sm2-review-local");
+}
+
+export function getLegacyWorkspaceFolder(): string {
+  const legacyFolder = workspace.getConfiguration("leetcode-problem-rating").get<string>("workspaceFolder", "");
+  if (!legacyFolder) {
+    return "";
+  }
+  return resolveWorkspaceFolder(legacyFolder);
 }
 
 // 隐藏解决题目
@@ -105,6 +113,54 @@ export function getWorkspaceFolderList(): Array<string> {
     result.push(element);
   }
   return result;
+}
+
+const LOCAL_DATA_DIR_NAME = ".lcpr_mmx_local";
+const PREVIOUS_LOCAL_DATA_DIR_NAME = ".lcpr_sm2_local";
+const LEGACY_DATA_DIR_NAME = ".lcpr_data";
+const DATA_FILE_RENAMES: Array<{ from: string; to: string }> = [
+  { from: "bricks-review.json", to: "mmx-review.json" },
+  { from: "bricks-review.json.bak", to: "mmx-review.json.bak" },
+  { from: "bricks.json", to: "study-progress.json" },
+];
+
+export function getExtensionDataDir(workspaceFolder: string, useLegacyDir: boolean = false): string {
+  return path.join(workspaceFolder, useLegacyDir ? LEGACY_DATA_DIR_NAME : LOCAL_DATA_DIR_NAME);
+}
+
+export function getPreviousExtensionDataDir(workspaceFolder: string): string {
+  return path.join(workspaceFolder, PREVIOUS_LOCAL_DATA_DIR_NAME);
+}
+
+export async function prepareExtensionDataDir(workspaceFolder: string, useLegacyDir: boolean = false): Promise<string> {
+  const targetDir = getExtensionDataDir(workspaceFolder, useLegacyDir);
+  if (useLegacyDir) {
+    await fse.ensureDir(targetDir);
+    return targetDir;
+  }
+
+  const previousDir = getPreviousExtensionDataDir(workspaceFolder);
+  const previousExists = await fse.pathExists(previousDir);
+  const targetExists = await fse.pathExists(targetDir);
+
+  if (previousExists && !targetExists) {
+    await fse.move(previousDir, targetDir, { overwrite: false });
+  } else {
+    await fse.ensureDir(targetDir);
+  }
+
+  await renameMigratedDataFiles(targetDir);
+  return targetDir;
+}
+
+async function renameMigratedDataFiles(dataDir: string): Promise<void> {
+  for (const { from, to } of DATA_FILE_RENAMES) {
+    const fromPath = path.join(dataDir, from);
+    const toPath = path.join(dataDir, to);
+    if ((await fse.pathExists(fromPath)) && !(await fse.pathExists(toPath))) {
+      await fse.move(fromPath, toPath, { overwrite: false });
+    }
+  }
 }
 
 // 尝试从环境变量解析WorkspaceFolder
@@ -259,7 +315,7 @@ export async function openSettingsEditor(query?: string): Promise<void> {
 
 // 设置默认语言
 export async function fetchProblemLanguage(): Promise<string | undefined> {
-  const leetCodeConfig: WorkspaceConfiguration = workspace.getConfiguration("leetcode-problem-rating");
+  const leetCodeConfig: WorkspaceConfiguration = workspace.getConfiguration("leetcode-sm2-review-local");
   let defaultLanguage: string | undefined = leetCodeConfig.get<string>("defaultLanguage");
   if (defaultLanguage && AllProgramLanguage.indexOf(defaultLanguage) < 0) {
     defaultLanguage = undefined;
@@ -475,7 +531,7 @@ export async function selectWorkspaceFolder(isAsk: boolean = true): Promise<stri
 }
 
 export async function setDefaultLanguage(): Promise<void> {
-  const leetCodeConfig: WorkspaceConfiguration = workspace.getConfiguration("leetcode-problem-rating");
+  const leetCodeConfig: WorkspaceConfiguration = workspace.getConfiguration("leetcode-sm2-review-local");
   const defaultLanguage: string | undefined = leetCodeConfig.get<string>("defaultLanguage");
   const languageItems: QuickPickItem[] = [];
   for (const language of AllProgramLanguage) {

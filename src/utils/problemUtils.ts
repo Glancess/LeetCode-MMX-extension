@@ -153,7 +153,7 @@ export async function getProblemSpecialCode(
 }
 
 export async function getEntryFile(language: string, problem: string): Promise<string> {
-  const extDir: string = vscode.extensions.getExtension("ccagml.vscode-leetcode-problem-rating")!.extensionPath;
+  const extDir: string = extensionState.context.extensionPath;
   const fileExt: string = genFileExt(language);
   const specialCode: string = await getProblemSpecialCode(language, problem, fileExt, extDir);
   const tmpEntryCode: string = (

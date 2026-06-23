@@ -142,7 +142,7 @@ class PreviewService extends BaseWebViewService {
   protected async onDidReceiveMessage(message: IWebViewMessage): Promise<void> {
     switch (message.command) {
       case "ShowProblem": {
-        await commands.executeCommand("lcpr.showProblem", this.node);
+        await commands.executeCommand("mmxlocal.showProblem", this.node);
         break;
       }
     }

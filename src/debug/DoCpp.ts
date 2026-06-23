@@ -212,7 +212,7 @@ export class DebugCpp {
       .replace(codeRegExp, insertCode);
     await fse.writeFile(entryFile, newEntryFileContent);
 
-    const extDir: string = vscode.extensions.getExtension("ccagml.vscode-leetcode-problem-rating")!.extensionPath;
+    const extDir: string = extensionState.context.extensionPath;
 
     // copy common.h
     const commonHeaderPath: string = path.join(extDir, "resources/debug/entry/cpp/problems/common.h");
@@ -242,7 +242,7 @@ export class DebugCpp {
     const thirdPartyPath: string = path.join(extDir, "resources/debug/thirdparty/c");
     const jsonPath: string = path.join(extDir, "resources/debug/thirdparty/c/cJSON.c");
 
-    const compiler = vscode.workspace.getConfiguration("leetcode-problem-rating").get<string>("cppCompiler") ?? "gdb";
+    const compiler = vscode.workspace.getConfiguration("leetcode-sm2-review-local").get<string>("cppCompiler") ?? "gdb";
     let debugConfig: any;
       switch (compiler) {
         case "clang": {

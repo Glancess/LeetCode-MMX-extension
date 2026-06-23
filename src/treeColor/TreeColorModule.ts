@@ -124,7 +124,7 @@ export class TreeColor implements FileDecorationProvider {
   }
 
   private isDifficultyBadgeEnabled(): boolean {
-    const configuration: WorkspaceConfiguration = workspace.getConfiguration("leetcode-problem-rating");
+    const configuration: WorkspaceConfiguration = workspace.getConfiguration("leetcode-sm2-review-local");
     return configuration.get<boolean>("colorizeProblems", false);
   }
 }

@@ -82,7 +82,7 @@ class StatusBarService implements Disposable {
     this.userStatus = UserStatus.SignedOut;
 
     this.configurationChangeListener = workspace.onDidChangeConfiguration((event: ConfigurationChangeEvent) => {
-      if (event.affectsConfiguration("leetcode-problem-rating.enableStatusBar")) {
+      if (event.affectsConfiguration("leetcode-sm2-review-local.enableStatusBar")) {
         this.setStatusBarVisibility();
       }
     }, this);

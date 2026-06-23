@@ -37,7 +37,7 @@ class ExecuteService implements Disposable {
     this.leetCodeCliRootPath = path.join(__dirname, "..", "..", "..", "out", "src", "rpc");
     this.nodeExecutable = this.initNodePath();
     this.configurationChangeListener = workspace.onDidChangeConfiguration((event: ConfigurationChangeEvent) => {
-      if (event.affectsConfiguration("leetcode-problem-rating.nodePath")) {
+      if (event.affectsConfiguration("leetcode-sm2-review-local.nodePath")) {
         this.nodeExecutable = this.initNodePath();
       }
     }, this);

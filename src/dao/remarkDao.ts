@@ -7,7 +7,7 @@
 // > > > > 题目内部编号.json 根据 qid 备注的信息
 // > >
 
-import { selectWorkspaceFolder } from "../utils/ConfigUtils";
+import { prepareExtensionDataDir, selectWorkspaceFolder } from "../utils/ConfigUtils";
 import { useWsl, toWinPath } from "../utils/SystemUtils";
 import * as path from "path";
 import * as fse from "fs-extra";
@@ -23,7 +23,7 @@ class RemarkDao {
     if (!workspaceFolder) {
       return;
     }
-    let lcpr_data_path: string = path.join(workspaceFolder, ".lcpr_data");
+    let lcpr_data_path: string = await prepareExtensionDataDir(workspaceFolder);
     await fse.ensureDir(lcpr_data_path);
 
     let remark_dir: string = path.join(lcpr_data_path, "remark");
