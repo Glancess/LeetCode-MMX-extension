@@ -193,6 +193,12 @@ export class BricksDataService implements TreeDataProvider<TreeNodeModel> {
 
     try {
       const raw = (await fse.readJson(this.reviewDataPath)) as Partial<IReviewStore>;
+      if (this.isEmptyReviewStore(raw)) {
+        const restoredNeedsPersist = await this.restoreReviewStoreFromBackup();
+        if (restoredNeedsPersist !== undefined && this.reviewCards.size > 0) {
+          return restoredNeedsPersist;
+        }
+      }
       return this.applyLoadedStore(raw);
     } catch {
       const restoredNeedsPersist = await this.restoreReviewStoreFromBackup();
@@ -271,7 +277,7 @@ export class BricksDataService implements TreeDataProvider<TreeNodeModel> {
   }
 
   private async writeStore(store: IReviewStore): Promise<void> {
-    await this.backupCurrentReviewStore();
+    await this.backupCurrentReviewStore(store);
     await fse.writeJson(this.reviewDataPath, store, { spaces: 2 });
   }
 
@@ -288,7 +294,7 @@ export class BricksDataService implements TreeDataProvider<TreeNodeModel> {
     return `${this.reviewDataPath}${REVIEW_STORE_BACKUP_SUFFIX}`;
   }
 
-  private async backupCurrentReviewStore(): Promise<void> {
+  private async backupCurrentReviewStore(nextStore?: IReviewStore): Promise<void> {
     if (!this.reviewDataPath) {
       return;
     }
@@ -302,7 +308,25 @@ export class BricksDataService implements TreeDataProvider<TreeNodeModel> {
       return;
     }
 
+    if (this.isEmptyReviewStore(nextStore) && (await this.hasUsableReviewStoreBackup())) {
+      return;
+    }
+
     await fse.copy(this.reviewDataPath, this.getReviewStoreBackupPath(), { overwrite: true });
+  }
+
+  private async hasUsableReviewStoreBackup(): Promise<boolean> {
+    const backupPath = this.getReviewStoreBackupPath();
+    if (!(await fse.pathExists(backupPath))) {
+      return false;
+    }
+
+    try {
+      const raw = (await fse.readJson(backupPath)) as Partial<IReviewStore>;
+      return Object.keys(this.normalizeReviewCards(raw.cards || {}).cards).length > 0;
+    } catch {
+      return false;
+    }
   }
 
   private async restoreReviewStoreFromBackup(): Promise<boolean | undefined> {
@@ -336,6 +360,10 @@ export class BricksDataService implements TreeDataProvider<TreeNodeModel> {
 
     const archivedPath = `${this.reviewDataPath}.corrupt-${Date.now()}`;
     await fse.copy(this.reviewDataPath, archivedPath, { overwrite: true });
+  }
+
+  private isEmptyReviewStore(store: Partial<IReviewStore> | undefined): boolean {
+    return !store?.cards || Object.keys(store.cards).length === 0;
   }
 
   private normalizeReviewCards(cards: Record<string, ReviewCard | LegacySM2Card>): {
